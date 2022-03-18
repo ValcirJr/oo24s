@@ -17,6 +17,7 @@ public class ConnectDataBase {
         properties.setProperty("password", "root");
 
         Connection conexao = null;
+
         try {
             conexao = DriverManager
                     .getConnection(DATABASE_URL, properties);
@@ -24,6 +25,7 @@ public class ConnectDataBase {
             System.out.println("ERRO AO CRIAR CONEXÃO");
             System.out.println(ex.getMessage());
         }
+
         return conexao;
     }
 }
