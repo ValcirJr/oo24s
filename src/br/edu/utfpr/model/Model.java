@@ -19,7 +19,7 @@ public abstract class Model {
     public void createTable() {
         try {
             Connection conn = ConnectDataBase.createConnections();
-
+            System.out.println("Criando tabela " +  this.getClass().getSimpleName());
             PreparedStatement psCreate = conn.prepareStatement(
                     generateCreateTableSQL().getCreateTable());
             PreparedStatement psDrop = conn.prepareStatement(
@@ -33,7 +33,7 @@ public abstract class Model {
             conn.close();
 
         } catch (SQLException e) {
-            System.out.println("ERRO AO CRIAR TABELA");
+            System.out.println("ERRO AO CRIAR TABELA " + this.getClass().getSimpleName());
             e.printStackTrace();
         }
     }
