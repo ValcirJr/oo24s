@@ -2,13 +2,47 @@ package br.edu.utfpr.repository;
 
 import br.edu.utfpr.database.ConnectDataBase;
 import br.edu.utfpr.model.Aluno;
+import br.edu.utfpr.model.Disciplina;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.sql.Statement.*;
 
-public class AlunoRepository {
+public class AlunoRepository implements Repository<Aluno> {
 
+    @Override
+    public List<Aluno> buscarTodos() {
+        Connection conn = ConnectDataBase.createConnections();
+        List<Aluno> retorno = new ArrayList<>();
+        try {
+            PreparedStatement psBuscar = conn.prepareStatement(
+                    "SELECT * FROM aluno"
+            );
+            psBuscar.executeQuery();
+            ResultSet resultSet = psBuscar.getResultSet();
+            while (resultSet.next()) {
+                retorno.add(
+                        new Aluno(
+                                resultSet.getInt(1),
+                                resultSet.getString(2),
+                                resultSet.getString(3),
+                                resultSet.getString(4),
+                                LocalDate.parse(resultSet.getString(5))
+                        )
+                );
+            }
+            psBuscar.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return retorno;
+    }
+
+    @Override
     public Aluno salvar(Aluno aluno) {
         Connection conn = ConnectDataBase.createConnections();
         try {
@@ -22,19 +56,13 @@ public class AlunoRepository {
             psSalvar.setDate(4, Date.valueOf(aluno.getDataNascimento()));
 
             int linhasAfetadas = psSalvar.executeUpdate();
+            ResultSet generatedKeys = psSalvar.getGeneratedKeys();
 
-            if(linhasAfetadas == 0){
-                System.out.println(String.format("ERRO AO ADICIONAR ALUNO %s",
-                        aluno.getNome().toUpperCase()));
-            }else {
-                ResultSet generatedKeys = psSalvar.getGeneratedKeys();
-                if(generatedKeys.next()) {
+            if(linhasAfetadas == 0)
+                System.out.printf("ERRO AO ADICIONAR ALUNO %s%n", aluno.getNome().toUpperCase());
+            else {
+                if(generatedKeys.next())
                     aluno.setId(generatedKeys.getInt(1));
-                    System.out.println(
-                            String.format("ALUNO %s INSERIDO"
-                                    , aluno.getNome().toUpperCase())
-                    );
-                }
             }
             psSalvar.close();
             conn.close();
@@ -42,9 +70,74 @@ public class AlunoRepository {
             e.printStackTrace();
             System.out.println("ERRO AO CADASTRAR ALUNO");
         }
-        System.out.println(String.format("Id do aluno inserido: %d", aluno.getId()));
         return aluno;
     }
 
+    @Override
+    public Aluno atualizar(Aluno aluno) {
+        return null;
+    }
+
+    @Override
+    public boolean remover(Aluno aluno) {
+        remover(aluno.getId());
+        return false;
+    }
+
+    @Override
+    public boolean remover(int i) {
+        Connection conn = ConnectDataBase.createConnections();
+        try {
+            PreparedStatement psExcluir = conn.prepareStatement("" +
+                    "DELETE FROM aluno WHERE id=?"
+            );
+            psExcluir.setInt(1, i);
+            int linhasAfetadas = psExcluir.executeUpdate();
+
+            psExcluir.close();
+            conn.close();
+
+            if(linhasAfetadas == 0) return true;
+            else return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("ERRO AO CADASTRAR ALUNO");
+        }
+        return false;
+    }
+
+    public List<Aluno> buscarPorDisciplina(Disciplina disciplina) {
+     return buscarPorDisciplina(disciplina.getId());
+    }
+
+    public List<Aluno> buscarPorDisciplina(int id) {
+        Connection conn = ConnectDataBase.createConnections();
+        List<Aluno> retorno = new ArrayList<>();
+        try {
+            PreparedStatement psBuscar = conn.prepareStatement(
+                    "SELECT * FROM aluno WHERE id_disciplina = ?"
+            );
+            psBuscar.setInt(1, id);
+            psBuscar.executeQuery();
+            ResultSet resultSet = psBuscar.getResultSet();
+            while (resultSet.next()) {
+                retorno.add(
+                        new Aluno(
+                                resultSet.getInt(1),
+                                resultSet.getString(2),
+                                resultSet.getString(3),
+                                resultSet.getString(4),
+                                LocalDate.parse(resultSet.getString(5)),
+                                resultSet.getInt(5)
+                                )
+                );
+            }
+            psBuscar.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return retorno;
+    }
 
 }
